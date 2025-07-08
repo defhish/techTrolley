@@ -1,8 +1,19 @@
 import { config } from "./config";
 import { getToken } from "./localstorage";
 
+const handleResponse = async (res) => {
+  try {
+    const data = await res.json(); // ✅ Correct way to parse JSON
+    return { statusCode: res.status, data };
+  } catch (e) {
+    console.error("❌ Failed to parse JSON:", e);
+    const raw = await res.text();
+    console.warn("📦 Raw response (not JSON):", raw);
+    return { statusCode: res.status, data: [] }; // fallback
+  }
+};
+
 const getRequest = async (path) => {
-  // console.log(getToken())
   try {
     const params = {
       method: "GET",
@@ -11,11 +22,9 @@ const getRequest = async (path) => {
       },
     };
     const res = await fetch(config.baseURL + path, params);
-    console.log({ res });
-    const data = await res.text();
-    return { statusCode: res.status, data };
+    return await handleResponse(res);
   } catch (e) {
-    console.error(`error in get Request (${path}) :- `, e);
+    console.error(`❌ Error in GET ${path}:`, e);
     return { statusCode: 400, data: [] };
   }
 };
@@ -30,15 +39,11 @@ const postRequest = async (path, body) => {
       },
       body: JSON.stringify(body),
     };
-
     const res = await fetch(config.baseURL + path, params);
-    // console.log(res)
-
-    const data = await res.text();
-    // console.log({data})
-    return { statusCode: res.status, data };
+    return await handleResponse(res);
   } catch (e) {
-    console.log(`error in post Request (${path}) :- `, e);
+    console.error(`❌ Error in POST ${path}:`, e);
+    return { statusCode: 400, data: [] };
   }
 };
 
@@ -51,13 +56,11 @@ const DeleteRequest = async (path) => {
         Authorization: "Bearer " + getToken(),
       },
     };
-
     const res = await fetch(config.baseURL + path, params);
-
-    const data = await res.text();
-    return { statusCode: res.status, data };
+    return await handleResponse(res);
   } catch (e) {
-    console.log(`error in Delete Request (${path}) :- `, e);
+    console.error(`❌ Error in DELETE ${path}:`, e);
+    return { statusCode: 400, data: [] };
   }
 };
 
@@ -71,13 +74,11 @@ const putRequest = async (path, body) => {
       },
       body: JSON.stringify(body),
     };
-
     const res = await fetch(config.baseURL + path, params);
-
-    const data = await res.text();
-    return { statusCode: res.status, data };
+    return await handleResponse(res);
   } catch (e) {
-    console.log(`error in PUT Request (${path}) :- `, e);
+    console.error(`❌ Error in PUT ${path}:`, e);
+    return { statusCode: 400, data: [] };
   }
 };
 
